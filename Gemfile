@@ -9,6 +9,10 @@ group(:development) do
 end
 
 group(:test, :development) do
-  gem('rake')
-  gem('cucumber')
+  gem('rake',			'>= 0.8.7')
+  gem('redcarpet')
+  gem('cucumber',		'~> 0.10.2')
+  gem('rcov',			'>= 0.9.9',
+      :platforms		=> :mri)
 end
+
