@@ -24,4 +24,7 @@ Gem::Specification.new do |s|
   s.require_paths = [
                      'lib',
                     ]
+  s.add_dependency(%q<versionomy>,		[ '>= 0' ])
+  s.add_dependency(%q<ruby-debug>,		[ '>= 0' ])
+  s.add_development_dependency(%q<test-unit>,	[ '>= 0' ])
 end

@@ -1,4 +1,4 @@
-# -*- coding: undecided -*-
+# -*- coding: utf-8 -*-
 #--
 #   Copyright © 2012 Ken Coar
 #
@@ -15,7 +15,7 @@
 #   limitations under the License.
 #++
 require('rubygems')
-require('chained/version')
+require('versionomy')
 
 class Chained
   #

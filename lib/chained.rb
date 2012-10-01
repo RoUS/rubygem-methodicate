@@ -69,12 +69,18 @@ class Chained
   # Instance methods to supersede in order to make ours a transparent
   # wrapping as much as possible.
   #
-  CHAINED_METHODS = [
-                     :inspect,
-                     :to_s,
-                     :to_str,
-                    ]
-
+  CHAINED_OVERRIDES	= [
+                           :inspect,
+                           :to_s,
+                           :to_str,
+                          ]
+  UNCHAINABLE_CLASSES	= [
+                           NilClass,
+                           TrueClass,
+                           FalseClass,
+                           Fixnum,
+                           String,
+                          ]
   #
   # Creates a new <tt>{Chained}</tt> instance that enwraps the given
   # object with our access methods and techniques.
@@ -90,7 +96,7 @@ class Chained
     # Define the superceding instance methods if the wrapped object
     # has them.
     #
-    CHAINED_METHODS.each do |mname_sym|
+    CHAINED_OVERRIDES.each do |mname_sym|
       next unless (@contents.respond_to?(mname_sym))
       #
       # We make a minimal stab at maintaining the arity of the
@@ -212,6 +218,12 @@ class Chained
       results = chainer.new(@contents[*keyargs])
     else
       results = @contents.send(mname_sym, *args)
+    end
+    #
+    # Some types of responses we don't want to wrap.
+    #
+    if (UNCHAINABLE_CLASSES.include?(results.unchained.class))
+      results = results.unchained
     end
     return results
   end

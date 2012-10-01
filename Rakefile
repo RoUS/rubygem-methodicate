@@ -25,6 +25,14 @@ task(:cleanup_rcov_files) do
   rm_rf('coverage.data')
 end
 
+namespace(:test) do
+  Rake::TestTask.new(:units) do |test|
+    test.libs << 'lib' << 'test'
+    test.pattern = 'test/units/**/test_*.rb'
+    test.verbose = true
+  end
+end
+
 namespace(:cucumber) do
   desc('Run cucumber features using rcov')
   Cucumber::Rake::Task.new(:rcov => :cleanup_rcov_files) do |t|
