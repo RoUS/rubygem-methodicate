@@ -51,6 +51,7 @@ end
 # can be accessed using a method-chain syntax regardless of the actual
 # object type.  For example:
 #
+# @example Illustrative mixed structure to be chained:
 #  hsh = {
 #    'A'     => 'a string',
 #    'B'     => :a_symbol,
@@ -64,6 +65,32 @@ end
 #               ],
 #    },
 #  }
+#  data = Chained.new(hsh)
+#
+# @example Accessing attributes/elements <i>via</i> method-like syntax:
+#  data.A
+#  => "a string"
+#  data.B
+#  => :a_symbol
+#
+# @example <tt>Symbol</tt> keys dominate <tt>String</tt> keys:
+#  data.a
+#  => { "h1" => "hv1", :h2 => [ "h", "v", "2" ], "H3" => [[ "deep", "array" ], { :deeper => :hash }] }
+#
+# @example Indexed access is still available (and sometimes required):
+#  data['A']
+#  => "a string"
+#  data[:a]
+#  => { "h1" => "hv1", :h2 => [ "h", "v", "2" ], "H3" => [[ "deep", "array" ], { :deeper => :hash }] }
+#  data['a']
+#  => [ 'an', 'array' ]
+#
+# @example Going deeper:
+#  data.a.H3.deeper
+#  => :hash
+#  data.a.h2[1]
+#  => "v"
+#
 class Chained
 
   class << self
