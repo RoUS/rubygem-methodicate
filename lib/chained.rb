@@ -46,61 +46,125 @@ end
 
 #
 # The <tt>Chained</tt> class provides a wrapper mechanism so that
-# nested objects (particularly {Enumerable} ones) can be accessed
-# using a method-chain syntax regardless of the actual object type.
-# For example:
+# nested objects (particularly
+# {http://ruby-doc.org/core-1.9.3/Enumerable.html Enumerable} ones)
+# can be accessed using a method-chain syntax regardless of the actual
+# object type.  For example:
 #
-#  hsh = \{
+#  hsh = {
 #    'A'     => 'a string',
 #    'B'     => :a_symbol,
 #    'a'     => [ 'an', 'array' ],
-#    :a      => \{
+#    :a      => {
 #      'h1'  => 'hv1',
 #      :h2   => [ 'h', 'v', '2' ],
 #      'H3'  => [
 #                 [ 'deep', 'array'],
-#                 \{ :deeper => :hash },
+#                 { :deeper => :hash },
 #               ],
 #    },
 #  }
 class Chained
 
+  class << self
+
+    #
+    # Array of symbols identifying methods that should be created on
+    # the wrapper to pass directly through to the wrapped object.
+    #
+    # @return [Array<Symbol>]
+    #  Current list of passthrough methods.
+    #
+    attr_accessor(:passthrough_methods)
+
+    #
+    # Array of class that <b>should not</b> be wrapped in a new
+    # instance of {Chained} when they occur as the result of an
+    # operation in the {#chained_method_missing method_missing}
+    # instance method.
+    #
+    # @return [Array<Class>]
+    #  Current list of classes that cannot be chained.
+    #
+    attr_accessor(:exclusions)
+
+  end
+
   #
   # Instance methods to supersede in order to make ours a transparent
   # wrapping as much as possible.
   #
-  CHAINED_OVERRIDES	= [
-                           :inspect,
-                           :instance_of?,
-                           :is_a?,
-                           :kind_of?,
-                           #:respond_to?,
-                           :to_s,
-                           :to_str,
-                          ]
-  UNCHAINABLE_CLASSES	= [
-                           NilClass,
-                           TrueClass,
-                           FalseClass,
-                           Fixnum,
-                           String,
-                          ]
+  # @note
+  #  As part of the transparency imperative, the {Chained} object
+  #  wrapper will 'fake' the response to the canonical {#class} and
+  #  comparison methods (<tt>:\<</tt>, <tt>==</tt>, <i>etc</i>.), and
+  #  pass them through to the wrapped object rather than using the
+  #  version inherited by the wrapper itself.  To determine if an
+  #  object is wrapped or not, use the {#chained?} method.
   #
-  # Creates a new <tt>{Chained}</tt> instance that enwraps the given
-  # object with our access methods and techniques.
+  # @note
+  #  To ensure that comparisons are made against the wrapped object
+  #  and not the wrapper, a {Chained} object <b>must</b> be on the
+  #  <abbr title="left-hand side">LHS</abbr> of the comparison
+  #  operator.
+  #
+  self.passthrough_methods	= [
+                                   :<,
+                                   :<=,
+                                   :==,
+                                   :eql?,
+                                   :>,
+                                   :>=,
+                                   :<=>,
+                                   :class,
+                                   :inspect,
+                                   :instance_of?,
+                                   :is_a?,
+                                   :kind_of?,
+                                   :to_s,
+                                   :to_str,
+                                  ]
+  self.exclusions		= [
+                                   NilClass,
+                                   Fixnum,
+                                   String,
+                                   Symbol,
+                                   TrueClass,
+                                   FalseClass,
+                                  ]
+  #
+  # Creates a new {Chained} instance that enwraps the given object
+  # with our access methods and techniques.  We create methods on
+  # ourself that pass directly through to the wrapped object according
+  # to the {passthrough_methods} array, and lastly add an alias on
+  # ourself for our {#chained_method_missing method_missing} method
+  # (done last so that it doesn't get triggered by anything in our
+  # constructor).
   #
   # @param [Object] contents_p
   #  Object to be wrapped by our access method package.
+  # @param [Boolean] honour_exclusions
+  #  Intended for internal use only, this flag allows even instances
+  #  of excluded classes to be wrapped.
   # @return [Chained]
   #  The original object, enclosed in an instance of our {Chained} class.
+  # @raise [ArgumentError]
+  #  if the class of <tt>contents_p</tt> is on the exclusion list.
+  # @see exclusions
+  # @see passthrough_methods
   #
-  def initialize(contents_p)
+  def initialize(contents_p, honour_exclusions=true)
+    if (honour_exclusions && Chained.exclusions.include?(contents_p.class))
+      raise ArgumentError.new("cannot wrap #<#{contents_p.class.name}> " +
+                              "instance; #{contents_p.class.name} " +
+                              'is on the exclusion list')
+    end
     @contents = contents_p
     #
     # Define the superceding instance methods if the wrapped object
     # has them.
     #
-    CHAINED_OVERRIDES.each do |mname_sym|
+    Chained.passthrough_methods.each do |mname_sym|
       next unless (@contents.respond_to?(mname_sym))
       #
       # We make a minimal stab at maintaining the arity of the
@@ -121,16 +185,21 @@ class Chained
         EOC
       end
     end
+    #
+    # Now that all the funky usages of <tt>#respond_to?</tt> have
+    # been made, we can plug in our {#chained_method_missing
+    # method_missing} hook -- <b>solely</b> on this instance of Chained.
+    #
     class << self
       alias_method(:method_missing, :chained_method_missing)
     end
   end
 
   #
-  # The <tt>chained</tt> gem adds a {Object#chained?} method so that
-  # unwrapped objects can be easily distinguished from those which are
-  # chainable.  Since this <i>is</i> the {Chain} class, here that
-  # method must obviously return <tt>true</tt>.
+  # The <tt>chained</tt> gem adds a {Object#chained? chained?} method
+  # so that unwrapped objects can be easily distinguished from those
+  # which are chainable.  Since this <i>is</i> the {Chained} class,
+  # that method must obviously return <tt>true</tt> in this context.
   #
   # @return [Boolean]
   #  <tt>true</tt> (because we <b>are</b> {Chained}, after all).
@@ -141,8 +210,8 @@ class Chained
 
   #
   # Sometimes it's necessary (or at least desirable) to be able to
-  # access the object inside the wrapper.  This method ({#unchained})
-  # returns it so that it can be manipulated directly.
+  # access the object inside the wrapper.  This method returns it so
+  # that it can be manipulated directly.
   #
   # @return [Object]
   #  Return the raw enclosed object.  This allows both outsiders and
@@ -153,24 +222,13 @@ class Chained
   end
 
   #
-  # As part of the transparency imperative, the {Chained} object
-  # wrapper will 'fake' the response to the canonical {#class} method,
-  # and return that from the wrapped object rather than from the
-  # wrapper.  To determine if an object is wrapped or not, use the
-  # {#chained?} method.
-  #
-  # @return [Class]
-  #  Return the class of the enclosed object, rather than ourselves.
-  #
-  def class
-    return @contents.class
-  end
-
+  # @!method method_missing(mname_sym, *args)
   #
   # Methods actually defined on a {Chained} instance bypass this
-  # mechanism (which is why we keep such to a minimum).  However,
-  # methods that were probably intended for the wrapped object
-  # <i>should</i> be intercepted here.
+  # mechanism (which is why we keep such methods to a minimum; we
+  # don't want to inadvertently occlude any methods on the wrapped
+  # object).  However, methods that were probably intended for the
+  # wrapped object <i>should</i> be intercepted here.
   #
   # The function of this method is the <i>raison d'être</i> of the
   # {Chained} gem.
@@ -186,23 +244,24 @@ class Chained
   #    outside of our scope.
   #
   # In all cases, we wrap the result in a new instance of {Chained} to
-  # maintain the semantics on down the line.
+  # maintain the semantics on down the line -- unless the class of the
+  # result is in the {exclusions} list.
   #
   # @param [Symbol] mname_sym
   #  Symbolic name to be treated as either a method or an index of the
   #  wrapped object.
   # @param [Array] args
   #  Additional arguments for the method (if any).
-  # @return [Chained]
-  #  Whatever we return (short of an exception) will be itself
-  #  enwrapped in a {Chained} instance.
+  # @return [Chained, Object]
+  #  Whatever we return (short of an exception or an instance of an
+  #  excluded class) will be itself enwrapped in a {Chained} instance.
   #
   def chained_method_missing(mname_sym, *args)
     chainer = Chained
     if (self.respond_to?(mname_sym))
       return self.__send__(mname_sym, *args)
     elsif (@contents.respond_to?(mname_sym))
-      results = chainer.new(@contents.send(mname_sym, *args))
+      results = chainer.new(@contents.send(mname_sym, *args), false)
     elsif (@contents.respond_to?(:[]))
       keyval = mname_sym
       catch(:gotakey) do
@@ -219,14 +278,14 @@ class Chained
       else
         keyargs = [ keyval, *args ]
       end
-      results = chainer.new(@contents[*keyargs])
+      results = chainer.new(@contents[*keyargs], false)
     else
       results = @contents.send(mname_sym, *args)
     end
     #
     # Some types of responses we don't want to wrap.
     #
-    if (UNCHAINABLE_CLASSES.include?(results.unchained.class))
+    if (Chained.exclusions.include?(results.unchained.class))
       results = results.unchained
     end
     return results

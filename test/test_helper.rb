@@ -7,3 +7,5 @@ Proc.new {
 require('stringio')
 require('test/unit')
 require('chained')
+require('ruby-debug')
+Debugger.start

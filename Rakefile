@@ -19,11 +19,9 @@ require('yard')
 YARD::Rake::YardocTask.new
 
 require('cucumber/rake/task')
-Cucumber::Rake::Task.new(:cucumber)
 
-task(:cleanup_rcov_files) do
-  rm_rf('coverage.data')
-end
+desc('Run all tests')
+task(:test => [ 'test:units', 'test:cucumber' ])
 
 namespace(:test) do
   Rake::TestTask.new(:units) do |test|
@@ -31,11 +29,18 @@ namespace(:test) do
     test.pattern = 'test/units/**/test_*.rb'
     test.verbose = true
   end
+
 end
 
-namespace(:cucumber) do
+Cucumber::Rake::Task.new('test:cucumber')
+
+task(:cleanup_rcov_files) do
+  rm_rf('coverage.data')
+end
+
+namespace('test:cucumber') do
   desc('Run cucumber features using rcov')
-  Cucumber::Rake::Task.new(:rcov => :cleanup_rcov_files) do |t|
+  Cucumber::Rake::Task.new(:rcov => [ :cleanup_rcov_files ]) do |t|
     t.cucumber_opts = %w{--format progress}
     t.rcov = true
     t.rcov_opts =  %[-Ilib -Ispec --exclude "gems/*,features"]

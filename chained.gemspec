@@ -26,5 +26,5 @@ Gem::Specification.new do |s|
                     ]
   s.add_dependency(%q<versionomy>,		[ '>= 0' ])
   s.add_dependency(%q<ruby-debug>,		[ '>= 0' ])
-  s.add_development_dependency(%q<test-unit>,	[ '>= 0' ])
+  s.add_development_dependency(%q<test-unit>,	[ '>= 2.3' ])
 end
