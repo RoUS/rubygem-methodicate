@@ -32,4 +32,14 @@ module Tests
     end
   end
 
+  def test_003_array_slice
+    tdata = [1, 2, 3, 4, 5]
+    tchain = Chained.new(tdata)
+    expected = tdata[1,3]
+    tslice = tchain[1,3]
+    assert_equal(expected.size, tslice.size)
+    assert_equal(expected, tslice.unchained)
+    assert_equal(inspect, tslice.inspect)
+  end
+
 end                             # module Tests

@@ -71,6 +71,10 @@ class Chained
   #
   CHAINED_OVERRIDES	= [
                            :inspect,
+                           :instance_of?,
+                           :is_a?,
+                           :kind_of?,
+                           #:respond_to?,
                            :to_s,
                            :to_str,
                           ]
