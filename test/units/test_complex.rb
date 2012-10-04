@@ -10,7 +10,7 @@ module Tests
   # Test handling of nested/mixed arrays, hashes, scalars, <i>et
   # cetera</i>.
   #
-  class TestChainedComplex < Test::Unit::TestCase
+  class TestMethodicatedComplex < Test::Unit::TestCase
 
     TDatum01 = {
       'A'	=> 'a string',
@@ -32,31 +32,31 @@ module Tests
     #
     def test_101_empty_to_sparse
 
-      tchain = Chained.new(TDatum01)
-      assert(tchain.chained?,
-             'Testing that "chained.new(complex)" is chained')
+      tchain = Methodicate.new(TDatum01)
+      assert(tchain.methodicated?,
+             'Testing that "methodicate.new(complex)" is chained')
       assert_equal(TDatum01['A'],		tchain.A,
-                   'Testing that "chained(complex).A == hash["A"]"')
+                   'Testing that "methodicate(complex).A == hash["A"]"')
       assert_equal(TDatum01['A'],		tchain['A'],
-                   'Testing that "chained(complex)["A"] == hash["A"]"')
+                   'Testing that "methodicate(complex)["A"] == hash["A"]"')
       assert_equal(TDatum01['B'],		tchain.B,
-                   'Testing that "chained(complex).B == hash["B"]"')
+                   'Testing that "methodicate(complex).B == hash["B"]"')
       assert_equal(TDatum01['B'],		tchain['B'],
-                   'Testing that "chained(complex)["B"] == hash["B"]"')
+                   'Testing that "methodicate(complex)["B"] == hash["B"]"')
 
       #
       # Note that the following assertions *must* reverse the
       # 'expected' and 'actual' arguments so that the #== method will
-      # be called on the *chained* value (which will pass it along),
+      # be called on the *methodicated* value (which will pass it along),
       # and not the *reference* value (which will try to compare to a
       # hash).
       #
       assert_equal(tchain.a,			TDatum01[:a],
-                   'Testing that "chained(complex).a == hash[:a]"')
+                   'Testing that "methodicate(complex).a == hash[:a]"')
       assert_equal(tchain[:a],			TDatum01[:a],
-                   'Testing that "chained(complex)[:a] == hash[:a]"')
+                   'Testing that "methodicate(complex)[:a] == hash[:a]"')
       assert_equal(tchain['a'],			TDatum01['a'],
-                   'Testing that "chained(complex)["a"] == hash["a"]"')
+                   'Testing that "methodicate(complex)["a"] == hash["a"]"')
 
       #
       # Revert to 'expected, actual' order.

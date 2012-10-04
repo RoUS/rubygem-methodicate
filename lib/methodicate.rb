@@ -15,43 +15,44 @@
 #   limitations under the License.
 #++
 require('rubygems')
-require('chained/version')
+require('methodicate/version')
 require('ruby-debug')
 Debugger.start
 
 #
-# Add a #chained? method to the Object ancestor class if it isn't already
-# there.
+# Add a #methodicated? method to the Object ancestor class if it isn't
+# already there.
 #
-unless (Object.method_defined?(:chained?))
+unless (Object.method_defined?(:methodicated?))
   #
   # Open the global ancestor class Object and add the
-  # <tt>#chained?</tt> method to it so that the method is available on
+  # <tt>#methodicated?</tt> method to it so that the method is available on
   # <b>all</b> objects.
   #
   class Object
     #
-    # Since the Chained class conceals its involvement in object
+    # Since the Methodicate class conceals its involvement in object
     # access, this method provides an authoritative way to find out if
     # a particular object is wrapped or not.
     #
     # @return [Boolean]
-    #  By default, {#chained?} will return <tt>false</tt> for all objects.
+    #  By default, {#methodicated?} will return <tt>false</tt> for all
+    #  objects.
     #
-    def chained?
+    def methodicated?
       return false
     end
   end
 end
 
 #
-# The <tt>Chained</tt> class provides a wrapper mechanism so that
+# The <tt>Methodicate</tt> class provides a wrapper mechanism so that
 # nested objects (particularly
 # {http://ruby-doc.org/core-1.9.3/Enumerable.html Enumerable} ones)
 # can be accessed using a method-chain syntax regardless of the actual
 # object type.  For example:
 #
-# @example Illustrative mixed structure to be chained:
+# @example Illustrative mixed structure to be methodicated:
 #  hsh = {
 #    'A'     => 'a string',
 #    'B'     => :a_symbol,
@@ -65,7 +66,7 @@ end
 #               ],
 #    },
 #  }
-#  data = Chained.new(hsh)
+#  data = Methodicate.new(hsh)
 #
 # @example Accessing attributes/elements <i>via</i> method-like syntax:
 #  data.A
@@ -91,7 +92,7 @@ end
 #  data.a.h2[1]
 #  => "v"
 #
-class Chained
+class Methodicate
 
   class << self
 
@@ -106,12 +107,12 @@ class Chained
 
     #
     # Array of class that <b>should not</b> be wrapped in a new
-    # instance of {Chained} when they occur as the result of an
-    # operation in the {#chained_method_missing method_missing}
+    # instance of {Methodicate} when they occur as the result of an
+    # operation in the {#methodicate_method_missing method_missing}
     # instance method.
     #
     # @return [Array<Class>]
-    #  Current list of classes that cannot be chained.
+    #  Current list of classes that cannot be methodicated.
     #
     attr_accessor(:exclusions)
 
@@ -122,16 +123,16 @@ class Chained
   # wrapping as much as possible.
   #
   # @note
-  #  As part of the transparency imperative, the {Chained} object
+  #  As part of the transparency imperative, the {Methodicate} object
   #  wrapper will 'fake' the response to the canonical {#class} and
   #  comparison methods (<tt>:\<</tt>, <tt>==</tt>, <i>etc</i>.), and
   #  pass them through to the wrapped object rather than using the
   #  version inherited by the wrapper itself.  To determine if an
-  #  object is wrapped or not, use the {#chained?} method.
+  #  object is wrapped or not, use the {#methodicated?} method.
   #
   # @note
   #  To ensure that comparisons are made against the wrapped object
-  #  and not the wrapper, a {Chained} object <b>must</b> be on the
+  #  and not the wrapper, a {Methodicate} object <b>must</b> be on the
   #  <abbr title="left-hand side">LHS</abbr> of the comparison
   #  operator.
   #
@@ -160,11 +161,11 @@ class Chained
                                    FalseClass,
                                   ]
   #
-  # Creates a new {Chained} instance that enwraps the given object
+  # Creates a new {Methodicate} instance that enwraps the given object
   # with our access methods and techniques.  We create methods on
   # ourself that pass directly through to the wrapped object according
   # to the {passthrough_methods} array, and lastly add an alias on
-  # ourself for our {#chained_method_missing method_missing} method
+  # ourself for our {#methodicate_method_missing method_missing} method
   # (done last so that it doesn't get triggered by anything in our
   # constructor).
   #
@@ -173,15 +174,15 @@ class Chained
   # @param [Boolean] honour_exclusions
   #  Intended for internal use only, this flag allows even instances
   #  of excluded classes to be wrapped.
-  # @return [Chained]
-  #  The original object, enclosed in an instance of our {Chained} class.
+  # @return [Methodicate]
+  #  The original object, enclosed in an instance of our {Methodicate} class.
   # @raise [ArgumentError]
   #  if the class of <tt>contents_p</tt> is on the exclusion list.
   # @see exclusions
   # @see passthrough_methods
   #
   def initialize(contents_p, honour_exclusions=true)
-    if (honour_exclusions && Chained.exclusions.include?(contents_p.class))
+    if (honour_exclusions && Methodicate.exclusions.include?(contents_p.class))
       raise ArgumentError.new("cannot wrap #<#{contents_p.class.name}> " +
                               "instance; #{contents_p.class.name} " +
                               'is on the exclusion list')
@@ -191,7 +192,7 @@ class Chained
     # Define the superceding instance methods if the wrapped object
     # has them.
     #
-    Chained.passthrough_methods.each do |mname_sym|
+    Methodicate.passthrough_methods.each do |mname_sym|
       next unless (@contents.respond_to?(mname_sym))
       #
       # We make a minimal stab at maintaining the arity of the
@@ -213,25 +214,27 @@ class Chained
       end
     end
     #
-    # Now that all the funky usages of <tt>#respond_to?</tt> have
-    # been made, we can plug in our {#chained_method_missing
-    # method_missing} hook -- <b>solely</b> on this instance of Chained.
+    # Now that all the funky usages of <tt>#respond_to?</tt> have been
+    # made, we can plug in our {#methodicate_method_missing
+    # method_missing} hook -- <b>solely</b> on this instance of
+    # Methodicate.
     #
     class << self
-      alias_method(:method_missing, :chained_method_missing)
+      alias_method(:method_missing, :methodicate_method_missing)
     end
   end
 
   #
-  # The <tt>chained</tt> gem adds a {Object#chained? chained?} method
-  # so that unwrapped objects can be easily distinguished from those
-  # which are chainable.  Since this <i>is</i> the {Chained} class,
-  # that method must obviously return <tt>true</tt> in this context.
+  # The <tt>methodicate</tt> gem adds a {Object#methodicated?
+  # methodicated?} method so that unwrapped objects can be easily
+  # distinguished from those which are methodicated.  Since this
+  # <i>is</i> the {Methodicate} class, that method must obviously
+  # return <tt>true</tt> in this context.
   #
   # @return [Boolean]
-  #  <tt>true</tt> (because we <b>are</b> {Chained}, after all).
+  #  <tt>true</tt> (because we <b>are</b> {Methodicate}d, after all).
   #
-  def chained?
+  def methodicated?
     return true
   end
 
@@ -244,21 +247,21 @@ class Chained
   #  Return the raw enclosed object.  This allows both outsiders and
   #  ourselves the ability to get at the original's instance methods.
   #
-  def unchained
+  def unmethodicated
     return @contents
   end
 
   #
   # @!method method_missing(mname_sym, *args)
   #
-  # Methods actually defined on a {Chained} instance bypass this
+  # Methods actually defined on a {Methodicate} instance bypass this
   # mechanism (which is why we keep such methods to a minimum; we
   # don't want to inadvertently occlude any methods on the wrapped
   # object).  However, methods that were probably intended for the
   # wrapped object <i>should</i> be intercepted here.
   #
   # The function of this method is the <i>raison d'être</i> of the
-  # {Chained} gem.
+  # {Methodicate} gem.
   #
   # 1. If the wrapped object has the requested method, we
   #    send it along.
@@ -270,7 +273,7 @@ class Chained
   #    that we expect it to raise an exception or be otherwise handled
   #    outside of our scope.
   #
-  # In all cases, we wrap the result in a new instance of {Chained} to
+  # In all cases, we wrap the result in a new instance of {Methodicate} to
   # maintain the semantics on down the line -- unless the class of the
   # result is in the {exclusions} list.
   #
@@ -279,12 +282,12 @@ class Chained
   #  wrapped object.
   # @param [Array] args
   #  Additional arguments for the method (if any).
-  # @return [Chained, Object]
+  # @return [Methodicate, Object]
   #  Whatever we return (short of an exception or an instance of an
-  #  excluded class) will be itself enwrapped in a {Chained} instance.
+  #  excluded class) will be itself enwrapped in a {Methodicate} instance.
   #
-  def chained_method_missing(mname_sym, *args)
-    chainer = Chained
+  def methodicate_method_missing(mname_sym, *args)
+    chainer = Methodicate
     if (self.respond_to?(mname_sym))
       return self.__send__(mname_sym, *args)
     elsif (@contents.respond_to?(mname_sym))
@@ -312,8 +315,8 @@ class Chained
     #
     # Some types of responses we don't want to wrap.
     #
-    if (Chained.exclusions.include?(results.unchained.class))
-      results = results.unchained
+    if (Methodicate.exclusions.include?(results.unmethodicated.class))
+      results = results.unmethodicated
     end
     return results
   end

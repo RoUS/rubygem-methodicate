@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    chained (0.1.0)
+    methodicate (0.2.0)
       ruby-debug
       versionomy
 
@@ -42,8 +42,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  chained!
   cucumber (~> 0.10.2)
+  methodicate!
   rake (>= 0.8.7)
   rcov (>= 0.9.9)
   redcarpet

@@ -1,10 +1,10 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path(File.join('..', 'lib'), __FILE__)
-require('chained/version')
+require('methodicate/version')
 
 Gem::Specification.new do |s|
-  s.name        = 'chained'
-  s.version     = Chained::VERSION
+  s.name        = 'methodicate'
+  s.version     = Methodicate::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = [
                    'Ken Coar',
@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.summary     = %q{TODO: Write a gem summary}
   s.description = %q{TODO: Write a gem description}
 
-  s.rubyforge_project = 'chained'
+  s.rubyforge_project = 'methodicate'
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")

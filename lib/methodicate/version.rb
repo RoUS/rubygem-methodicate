@@ -17,12 +17,22 @@
 require('rubygems')
 require('versionomy')
 
-class Chained
+class Methodicate
+
+  #
+  # Original first-commit as 'chained'
+  #
+  version = Versionomy.parse('0.1.0')
+  #
+  # 'chained' renamed to 'methodicate'
+  #
+  version = version.bump(:minor)
+
   #
   # Our gem's version as a Versionomy object.  (Good for comparisons
   # and field extractions.
   #
-  Version = Versionomy.parse('0.1.0')
+  Version = version.dup.freeze
 
   #
   # Our gem's version as a straight String extracted from the

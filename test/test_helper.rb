@@ -6,6 +6,6 @@ Proc.new {
 }.call
 require('stringio')
 require('test/unit')
-require('chained')
+require('methodicate')
 require('ruby-debug')
 Debugger.start
