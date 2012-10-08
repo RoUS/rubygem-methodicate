@@ -94,38 +94,14 @@ end
 #
 class Methodicate
 
-  class << self
-
-    #
-    # Array of symbols identifying methods that should be created on
-    # the wrapper to pass directly through to the wrapped object.
-    #
-    # @return [Array<Symbol>]
-    #  Current list of passthrough methods.
-    #
-    attr_accessor(:passthrough_methods)
-
-    #
-    # Array of class that <b>should not</b> be wrapped in a new
-    # instance of {Methodicate} when they occur as the result of an
-    # operation in the {#methodicate_method_missing method_missing}
-    # instance method.
-    #
-    # @return [Array<Class>]
-    #  Current list of classes that cannot be methodicated.
-    #
-    attr_accessor(:exclusions)
-
-  end
-
   #
   # Instance methods to supersede in order to make ours a transparent
   # wrapping as much as possible.
   #
   # @note
   #  As part of the transparency imperative, the {Methodicate} object
-  #  wrapper will 'fake' the response to the canonical {#class} and
-  #  comparison methods (<tt>:\<</tt>, <tt>==</tt>, <i>etc</i>.), and
+  #  wrapper will 'fake' the response to the canonical <tt>#class</tt> and
+  #  comparison methods (<tt>#\<</tt>, <tt>#==</tt>, <i>etc</i>.), and
   #  pass them through to the wrapped object rather than using the
   #  version inherited by the wrapper itself.  To determine if an
   #  object is wrapped or not, use the {#methodicated?} method.
@@ -136,7 +112,7 @@ class Methodicate
   #  <abbr title="left-hand side">LHS</abbr> of the comparison
   #  operator.
   #
-  self.passthrough_methods	= [
+  DEFAULT_PASSTHROUGH_METHODS	= [
                                    :<,
                                    :<=,
                                    :==,
@@ -152,7 +128,13 @@ class Methodicate
                                    :to_s,
                                    :to_str,
                                   ]
-  self.exclusions		= [
+
+  #
+  # There are some classes for which wrapping doesn't make sense, like
+  # NilClass or the Booleans.  This is the default list of those,
+  # modifiable by the {exclusions=} method.
+  #
+  DEFAULT_EXCLUSIONS		= [
                                    NilClass,
                                    Fixnum,
                                    String,
@@ -160,6 +142,100 @@ class Methodicate
                                    TrueClass,
                                    FalseClass,
                                   ]
+  #
+  # Eigenclass for {Methodicate} -- add some class methods.
+  #
+  class << self
+
+    #
+    # @!attribute [r] passthrough_methods
+    #
+    # Array of symbols identifying methods that should be created on
+    # the wrapper to pass directly through to the wrapped object.
+    #
+    # @return [Array<Symbol>]
+    #  Current list of passthrough methods.
+    #
+    def passthrough_methods
+      return (@passthrough_methods ||= [])
+    end
+
+    #
+    # @!attribute [w] passthrough_methods
+    #
+    # Set the list of methods which will be passed through to a
+    # wrapped object if the latter is prepared to respond to them.  The
+    # variable-length argument list will be flattened and all elements
+    # will be turned into Symbols, so
+    #  passthrough_methods = [ "a", "b" ]
+    # and
+    #  passthrough_methods = [ :a, :b ]
+    # are exactly equivalent.
+    #
+    # @param [Array<Object>] args
+    #  Variable-length array of methods comprising the new passthrough
+    #  list.
+    # @return [Array<Symbol>]
+    #  Current list of passthrough methods.
+    #
+    def passthrough_methods=(*args)
+      newval = [ *args ].flatten.uniq.map { |o| o.to_sym }
+      self.passthrough_methods.replace(newval)
+      return @passthrough_methods
+    end
+
+    #
+    # @!attribute [r] exclusions
+    #
+    # Array of the types of objects for which wrapping in a
+    # {Methodicate} instance doesn't really make sense.  Typically
+    # the elements of this array are instances of
+    # {http://www.ruby-doc.org/core-1.9.3/Class.html Class}.
+    #
+    # @return [Array<Object>]
+    #  Array of the objects (typically instances of
+    #  {http://www.ruby-doc.org/core-1.9.3/Class.html Class}) that
+    #  cannot be wrapped in a {Methodicate} instance.
+    #
+    def exclusions
+      return (@exclusions ||= [])
+    end
+
+    #
+    # @!attribute [w] exclusions
+    #
+    # Array of classes that <b>should not</b> be wrapped in a new
+    # instance of {Methodicate} when they occur as the result of an
+    # operation in the {#methodicate_method_missing method_missing}
+    # instance method.
+    #
+    # @param [Array<Class>] args
+    #  List of classes which aren't subject to being wrapped in a
+    #  {Methodicate} instance.
+    # @return [Array<Class>]
+    #  Current list of classes that cannot be methodicated.
+    #
+    def exclusions=(*args)
+      self.exclusions.replace([ *args ].flatten)
+      return @exclusions
+    end
+
+    #
+    # Reset the lists of {passthrough_methods} and {exclusions} to
+    # their default values.
+    #
+    # @return [void]
+    #
+    def reset
+      self.exclusions = DEFAULT_EXCLUSIONS
+      self.passthrough_methods = DEFAULT_PASSTHROUGH_METHODS
+      return nil
+    end
+
+  end
+
+  self.reset
+
   #
   # Creates a new {Methodicate} instance that enwraps the given object
   # with our access methods and techniques.  We create methods on
